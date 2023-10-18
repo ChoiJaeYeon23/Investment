@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert } from 'react-native';
+import { View, Text, TextInput, Button, Alert,StyleSheet,TouchableOpacity, Touchable } from 'react-native';
 
 const LoginScreen = ({ navigation }) => {
   const [name, setName] = useState('');
@@ -16,7 +16,7 @@ const LoginScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+    <View style={styles.container}>
       <Text style={{ fontSize: 20, marginBottom: 20 }}>Login Screen</Text>
       <TextInput
         placeholder="Name"
@@ -30,9 +30,47 @@ const LoginScreen = ({ navigation }) => {
         onChangeText={text => setEmail(text)}
         style={{ marginVertical: 10, padding: 10, borderColor: 'gray', borderWidth: 1 }}
       />
-      <Button title="Login" onPress={handleLogin} />
+      <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>
+        <Text style = {styles.loginText}>로그인</Text>
+      </TouchableOpacity>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#CC99FF",
+  },
+  inputTT: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "75%",
+    height: 45,
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    backgroundColor: "white",
+    borderColor: "black",
+    borderWidth: 2,
+    borderRadius: 7,
+  },
+  loginBtn: {
+    width: "75%",
+    height: 45,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 7,
+    backgroundColor: "white",
+    borderWidth: 2,
+    marginBottom: 10,
+  },
+  loginText: {
+    color: "black",
+    fontWeight: "bold",
+  },
+});
 
 export default LoginScreen;
