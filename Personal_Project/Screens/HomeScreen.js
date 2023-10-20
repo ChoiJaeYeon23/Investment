@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import axios from 'axios';
 
 const HomeScreen = ({ route, navigation }) => {
   const { name } = route.params;
@@ -10,12 +9,9 @@ const HomeScreen = ({ route, navigation }) => {
 
   const fetchCryptoPrices = async () => {
     try {
-      const response = await fetch('https://api.bithumb.com/public/ticker/ALL_KRW', {
-        method: 'GET',
-        headers: { accept: 'application/json' },
-      });
+      const response = await fetch('https://api.bithumb.com/public/ticker/ALL_KRW');
       const data = await response.json();
-      setCryptoPrices(data.data);  // 모든 가상화폐의 현재가 정보 저장
+      setCryptoPrices(data.data);
     } catch (error) {
       console.error('Error fetching crypto prices:', error.message);
     }
@@ -24,6 +20,13 @@ const HomeScreen = ({ route, navigation }) => {
   useEffect(() => {
     fetchCryptoPrices();
   }, []);
+
+  useEffect(() => {
+    if (route.params?.newCash && route.params?.newOwnedCryptos) {
+      setCash(route.params.newCash);
+      setOwnedCryptos(route.params.newOwnedCryptos);
+    }
+  }, [route.params?.newCash, route.params?.newOwnedCryptos]);
 
   return (
     <View style={styles.container}>
@@ -36,10 +39,6 @@ const HomeScreen = ({ route, navigation }) => {
         cryptoPrices,
         cash,
         ownedCryptos,
-        onTradeSuccess: (newCash, newOwnedCryptos) => {
-          setCash(newCash);
-          setOwnedCryptos(newOwnedCryptos);
-        }
       })} style={{ marginVertical: 20 }}>
         <Text style={styles.loginText}>Trade</Text>
       </TouchableOpacity>
