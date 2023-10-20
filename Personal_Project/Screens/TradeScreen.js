@@ -11,8 +11,13 @@ const TradeScreen = ({ route, navigation }) => {
   const [tradeQuantity, setTradeQuantity] = useState('');
   const [cryptoPriceHistory, setCryptoPriceHistory] = useState([]);
   const [cryptoHoldings, setCryptoHoldings] = useState({});
+  const [initialCash, setInitialCash] = useState(parseFloat(cash));
 
   const { cash } = route.params;
+
+  useEffect(() => {
+    setInitialCash(parseFloat(cash));
+  }, []);
 
   useEffect(() => {
     const fetchCryptoPrices = async () => {
@@ -30,16 +35,13 @@ const TradeScreen = ({ route, navigation }) => {
         console.error("Failed to fetch crypto prices:", error);
       }
     };
-
     const interval = setInterval(fetchCryptoPrices, 500);
     return () => clearInterval(interval);
   }, [selectedCrypto]);
-
   const handleCryptoChange = (value) => {
     setSelectedCrypto(value);
     setCryptoPriceHistory([]);
   };
-
   const getCurrentPrice = () => {
     if (cryptoPrices && cryptoPrices[selectedCrypto]) {
       return parseFloat(cryptoPrices[selectedCrypto].closing_price);
@@ -47,16 +49,53 @@ const TradeScreen = ({ route, navigation }) => {
     return 0;
   };
 
-  const handleTrade = (type) => {
-    const amount = parseFloat(tradeQuantity); // 사용자가 입력한 금액
-    const currentPrice = getCurrentPrice(); // 현재 가상화폐 가격
+  const getProfitPercentage = () => {
+    const totalValueNow = parseFloat(cash) + getTotalCryptoValue();
+    const totalValueInitial = parseFloat(initialCash);
 
-    if (isNaN(amount) || amount <= 0) {
-      alert("올바른 금액을 입력하세요.");
+    if (!totalValueNow || !totalValueInitial) return 0; // NaN 값 방지
+
+    return ((totalValueNow - totalValueInitial) / totalValueInitial) * 100;
+  };
+
+  const getProfitAmount = () => {
+    const totalValueNow = parseFloat(cash) + getTotalCryptoValue();
+    const totalValueInitial = parseFloat(initialCash);
+    return totalValueNow - totalValueInitial;
+  };
+
+  const getProfitTextColor = () => {
+    const percentage = getProfitPercentage();
+    return percentage > 0 ? 'red' : 'blue';
+  };
+
+
+  const handleFullBuy = () => {
+    const currentPrice = getCurrentPrice();
+    if (currentPrice <= 0) {
+      alert("유효한 가상화폐 가격이 아닙니다.");
       return;
     }
 
+    const possibleQuantity = cash / currentPrice;
+    setCryptoHoldings(prevHoldings => ({
+      ...prevHoldings,
+      [selectedCrypto]: (prevHoldings[selectedCrypto] || 0) + possibleQuantity
+    }));
+
+    route.params.cash = 0; // 전체 현금 사용
+  };
+  const handleTrade = (type) => {
+    const currentPrice = getCurrentPrice();
+
     if (type === 'buy') {
+      const amount = type === 'allIn' ? parseFloat(cash) : parseFloat(tradeQuantity);
+
+      if (isNaN(amount) || amount <= 0) {
+        alert("올바른 금액을 입력하세요.");
+        return;
+      }
+
       const requiredCash = amount;
       if (cash < requiredCash) {
         alert("잔고 부족!");
@@ -69,26 +108,32 @@ const TradeScreen = ({ route, navigation }) => {
         [selectedCrypto]: (prevHoldings[selectedCrypto] || 0) + purchasedQuantity
       }));
 
-      // 현금 잔고 감소
       route.params.cash -= requiredCash;
+
     } else if (type === 'sell') {
-      const sellingQuantity = amount / currentPrice;
       const userHolding = cryptoHoldings[selectedCrypto] || 0;
 
-      if (userHolding < sellingQuantity) {
-        alert("보유량 부족!");
+      if (userHolding <= 0) {
+        alert("보유한 가상화폐가 없습니다!");
         return;
       }
 
-      setCryptoHoldings(prevHoldings => ({
-        ...prevHoldings,
-        [selectedCrypto]: prevHoldings[selectedCrypto] - sellingQuantity
-      }));
+      const amountFromSell = userHolding * currentPrice;
 
-      // 현금 잔고 증가
-      route.params.cash += amount;
+      setCryptoHoldings(prevHoldings => {
+        const updatedHoldings = { ...prevHoldings };
+        delete updatedHoldings[selectedCrypto];
+        return updatedHoldings;
+      });
+
+      route.params.cash += amountFromSell;
+
+      // 매도시 초기화
+      setInitialCash(route.params.cash);
     }
   };
+
+
 
   const getTotalCryptoValue = () => {
     return Object.entries(cryptoHoldings).reduce((total, [crypto, quantity]) => {
@@ -96,6 +141,7 @@ const TradeScreen = ({ route, navigation }) => {
       return total + (cryptoPrice * quantity);
     }, 0);
   };
+
 
   return (
     <View style={styles.container}>
@@ -105,8 +151,6 @@ const TradeScreen = ({ route, navigation }) => {
         onSelect={(value) => handleCryptoChange(value)}
         style={styles.dropdown}
       />
-
-
       <Text style={styles.loginText}>
         {selectedCrypto} 가격: {getCurrentPrice().toFixed(2)}원
       </Text>
@@ -119,8 +163,7 @@ const TradeScreen = ({ route, navigation }) => {
           }}
           width={Dimensions.get("window").width}
           height={220}
-          yAxisLabel="$"
-          yAxisSuffix="K"
+          yAxisSuffix="원"
           yAxisInterval={1}
           segments={5}
           withInnerLines={true}
@@ -142,7 +185,6 @@ const TradeScreen = ({ route, navigation }) => {
         />
       }
 
-      <Text style={styles.loginText}>현재 잔고: {cash.toFixed(2)}원</Text>
       <TextInput
         placeholder="구매 할 금액 입력"
         keyboardType="numeric"
@@ -150,28 +192,35 @@ const TradeScreen = ({ route, navigation }) => {
         onChangeText={text => setTradeQuantity(text)}
         style={styles.inputTT}
         returnKeyType="done"
-        onSubmitEditing={() => {
-          // 여기에 버튼을 눌렀을 때 실행할 코드를 추가하면 됩니다.
-        }}
       />
+      <Text style={styles.loginText}>
+        총 자산 : {(cash + getTotalCryptoValue()).toFixed(2)}원
+      </Text>
+      <Text style={styles.loginText}>보유한 현금 : {cash.toFixed(2)}원</Text>
       <Text style={styles.loginText}>
         내가 보유한 가상화폐 목록 : {Object.entries(cryptoHoldings).map(([crypto, quantity]) => (
           `${crypto} ${quantity.toFixed(2)}개`
         )).join(', ')}
       </Text>
 
-      <Text style={styles.loginText}>현 자산 : </Text>
-      <Text style={styles.loginText}>현금 : {cash.toFixed(2)}원</Text>
-      <Text style={styles.loginText}>가상화폐 : {getTotalCryptoValue().toFixed(2)}원</Text>
+      <Text style={[styles.loginText, { color: getProfitTextColor() }]}>
+        수익률: {getProfitPercentage().toFixed(2)}%
+      </Text>
+      <Text style={[styles.loginText, { color: getProfitTextColor() }]}>
+        수익/손실 금액: {getProfitAmount().toFixed(2)}원
+      </Text>
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.tradeBtn} onPress={() => handleTrade('buy')}>
+        <TouchableOpacity style={styles.tradeBtnBuy} onPress={() => handleTrade('buy')}>
           <Text style={styles.loginText}>매수</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.tradeBtn} onPress={() => handleTrade('sell')}>
-          <Text style={styles.loginText}>매도</Text>
+        <TouchableOpacity style={styles.tradeBtnSell} onPress={() => handleTrade('sell')}>
+          <Text style={styles.loginText}>전체 매도</Text>
         </TouchableOpacity>
       </View>
+      <TouchableOpacity style={styles.tradeBtnFullBuy} onPress={handleFullBuy}>
+        <Text style={styles.loginText}>전체 매수</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -217,9 +266,17 @@ const styles = StyleSheet.create({
     width: Dimensions.get("window").width * 0.9,
     marginBottom: 10,
   },
-  tradeBtn: {
+  tradeBtnSell: {
     flex: 1,
     backgroundColor: "#00BFFF",
+    padding: 15,
+    alignItems: "center",
+    borderRadius: 8,
+    margin: 5,
+  },
+  tradeBtnBuy: {
+    flex: 1,
+    backgroundColor: "#FF0000",
     padding: 15,
     alignItems: "center",
     borderRadius: 8,
@@ -230,7 +287,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '90%',
   },
-
+  tradeBtnFullBuy: {
+    width: "90%",
+    backgroundColor: "#b36ee8",
+    padding: 15,
+    alignItems: "center",
+    borderRadius: 8,
+    margin: 5,
+  }
 });
 
 export default TradeScreen;

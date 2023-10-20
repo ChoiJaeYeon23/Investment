@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 const HomeScreen = ({ route, navigation }) => {
-  const { name } = route.params;
+  const { id } = route.params;
   const [cryptoPrices, setCryptoPrices] = useState({});
-  const [cash, setCash] = useState(10000);
+  const [cash, setCash] = useState(1000000000);
   const [ownedCryptos, setOwnedCryptos] = useState([]);
 
   const fetchCryptoPrices = async () => {
@@ -30,7 +30,7 @@ const HomeScreen = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.loginText}>Welcome, {name}!</Text>
+      <Text style={styles.loginText}>Welcome, {id}!</Text>
       <Text style={styles.loginText}>
         현금: ${cash.toFixed(2)}
       </Text>

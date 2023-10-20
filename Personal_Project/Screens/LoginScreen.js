@@ -1,37 +1,67 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert,StyleSheet,TouchableOpacity, Touchable } from 'react-native';
+import { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
+import { collection, getDocs, addDoc } from "firebase/firestore";
+import { db } from "../DB/FireBase";
+import { useNavigation } from "@react-navigation/native";
 
-const LoginScreen = ({ navigation }) => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+const LoginScreen = () => {
+  const [id, setID] = useState("");
+  const [pw, setPW] = useState("");
+  const navigation = useNavigation();
 
-  const handleLogin = () => {
-    // 로그인 로직 추가
-    if (name && email) {
-      // 성공적으로 로그인한 경우
-      navigation.navigate('Home', { name });
-    } else {
-      Alert.alert('Login Failed', 'Please enter both name and email.');
+  const resetInputs = () => { // 초기화 함수
+    setID("");
+    setPW("");
+  };
+
+  const Login = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "Login"));
+      const users = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      const user = users.find((u) => u.ID === id && u.PW === pw);
+
+      if (user) {
+        alert("로그인 성공");
+        resetInputs()
+        navigation.navigate("Home", { id });
+      } else {
+        alert("ID 또는 비밀번호가 잘못되었습니다.");
+        resetInputs()
+      }
+    } catch (error) {
+      console.log(error.message);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={{ fontSize: 20, marginBottom: 20 }}>Login Screen</Text>
       <TextInput
-        placeholder="Name"
-        value={name}
-        onChangeText={text => setName(text)}
-        style={{ marginVertical: 10, padding: 10, borderColor: 'gray', borderWidth: 1 }}
+        style={styles.inputTT}
+        placeholder="아이디"
+        value={id}
+        onChangeText={setID}
       />
       <TextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={text => setEmail(text)}
-        style={{ marginVertical: 10, padding: 10, borderColor: 'gray', borderWidth: 1 }}
+        style={styles.inputTT}
+        placeholder="비밀번호"
+        secureTextEntry
+        value={pw}
+        onChangeText={setPW}
       />
-      <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>
-        <Text style = {styles.loginText}>로그인</Text>
+      <TouchableOpacity style={styles.loginBtn} onPress={Login}>
+        <Text style={styles.loginText}>로그인</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.loginBtn}>
+        <Text style={styles.loginText}>회원가입</Text>
       </TouchableOpacity>
     </View>
   );
@@ -42,7 +72,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#CC99FF",
+    backgroundColor: "#9acd32",
   },
   inputTT: {
     alignItems: "center",
