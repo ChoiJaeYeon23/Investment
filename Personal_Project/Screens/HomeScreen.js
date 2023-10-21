@@ -1,46 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 
 const HomeScreen = ({ route, navigation }) => {
   const { id } = route.params;
-  const [cryptoPrices, setCryptoPrices] = useState({});
-  const [cash, setCash] = useState(1000000000);
-  const [ownedCryptos, setOwnedCryptos] = useState([]);
+  const [cash, setCash] = useState('');
+  const [inputCash, setInputCash] = useState(cash.toString()); // 사용자 입력을 위한 상태
 
-  const fetchCryptoPrices = async () => {
-    try {
-      const response = await fetch('https://api.bithumb.com/public/ticker/ALL_KRW');
-      const data = await response.json();
-      setCryptoPrices(data.data);
-    } catch (error) {
-      console.error('Error fetching crypto prices:', error.message);
-    }
-  };
-
-  useEffect(() => {
-    fetchCryptoPrices();
-  }, []);
-
-  useEffect(() => {
-    if (route.params?.newCash && route.params?.newOwnedCryptos) {
-      setCash(route.params.newCash);
-      setOwnedCryptos(route.params.newOwnedCryptos);
-    }
-  }, [route.params?.newCash, route.params?.newOwnedCryptos]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.loginText}>Welcome, {id}!</Text>
       <Text style={styles.loginText}>
-        현금: ${cash.toFixed(2)}
+        현금: {cash.toLocaleString('ko-KR')}₩
       </Text>
-      {/* TODO: 여기에 구매한 가상화폐의 수익율을 표시하는 코드 추가 */}
-      <TouchableOpacity onPress={() => navigation.navigate('Trade', {
-        cryptoPrices,
-        cash,
-        ownedCryptos,
-      })} style={{ marginVertical: 20 }}>
-        <Text style={styles.loginText}>Trade</Text>
+      <TextInput
+        style={styles.input}
+        value={inputCash}
+        onChangeText={setInputCash}
+        keyboardType="numeric"
+        returnKeyType="done"
+        placeholder="가상투자 할 자산(원화)입력"
+        onSubmitEditing={() => setCash(parseFloat(inputCash))}
+      />
+      <TouchableOpacity
+        onPress={() => navigation.navigate('Trade', { cash })}
+        style={{ marginVertical: 20 }}
+      >
+        <Text style={styles.loginText}>가상투자하러가기</Text>
       </TouchableOpacity>
     </View>
   );
@@ -56,6 +42,14 @@ const styles = StyleSheet.create({
   loginText: {
     color: "black",
     fontWeight: "bold",
+  },
+  input: {
+    width: "80%",
+    backgroundColor: "white",
+    padding: 10,
+    marginVertical: 10,
+    borderRadius: 5,
+    textAlign: 'center',
   },
 });
 

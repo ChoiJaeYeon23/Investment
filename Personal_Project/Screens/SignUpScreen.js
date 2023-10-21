@@ -1,16 +1,10 @@
 import { useState } from "react";
-import {
-    View,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    StyleSheet,
-} from "react-native";
-import { collection, getDocs, addDoc } from "firebase/firestore";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { collection, addDoc } from "firebase/firestore";
 import { db } from "../DB/FireBase";
 import { useNavigation } from "@react-navigation/native";
 
-const SingUpScreen = () => {
+const SignUpScreen = () => {
     const [id, setID] = useState("");
     const [pw, setPW] = useState("");
     const navigation = useNavigation();
@@ -96,4 +90,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default SingUpScreen;
+export default SignUpScreen;

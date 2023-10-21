@@ -38,6 +38,7 @@ const CustomDropdown = ({ options, defaultValue, onSelect, style }) => {
         </View>
     );
 };
+
 const styles = StyleSheet.create({
     centeredView: {
         flex: 1,
@@ -67,19 +68,19 @@ const styles = StyleSheet.create({
         textAlign: "center"
     },
     dropdownButton: {
-        justifyContent: 'center',  // 가운데 정렬
+        justifyContent: 'center',
         alignItems: 'center',
         width: '100%',
-        height: '100%',
+        height: '100%'
     },
     dropdownText: {
         textAlign: 'center',
     },
     listItem: {
-        width: 200,  // 아이템 가로 길이를 100%로 설정
+        width: 200,
         height: 40,
         justifyContent: 'center',
-        alignItems: 'center',  // 텍스트를 가운데 정렬
+        alignItems: 'center'
     }
 
 });
