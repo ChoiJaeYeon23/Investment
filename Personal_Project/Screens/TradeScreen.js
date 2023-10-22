@@ -3,7 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions,
 } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
-import CustomDropdown from '../DropDown/CustomDropdown' // 경로는 실제 파일 위치에 따라 조절하세요.
+import CustomDropdown from '../DropDown/CustomDropdown'
 
 const TradeScreen = ({ route, navigation }) => {
   const [cryptoPrices, setCryptoPrices] = useState(0);
@@ -31,11 +31,14 @@ const TradeScreen = ({ route, navigation }) => {
         setCryptoPrices(data.data);
 
         const newPrice = parseFloat(data.data[selectedCrypto].closing_price);
-        setCryptoPriceHistory(prev => [...prev, newPrice].slice(-15));
+        setCryptoPriceHistory(prev => [...prev, newPrice].slice(-15)); // 차트에 15개까지 표시하기 위한
       } catch (error) {
         console.error("Failed to fetch crypto prices:", error);
       }
     };
+
+
+
     const interval = setInterval(fetchCryptoPrices, 500);
     return () => clearInterval(interval);
   }, [selectedCrypto]);
@@ -133,7 +136,7 @@ const TradeScreen = ({ route, navigation }) => {
 
       route.params.cash += amountFromSell;
 
-      // 매도시 초기화
+      // 매도시 수익률 초기화
       setInitialCash(route.params.cash);
     }
   };
